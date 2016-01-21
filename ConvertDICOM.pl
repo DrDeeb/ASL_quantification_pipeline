@@ -20,7 +20,11 @@ Usage $0 [options]
 -help for options
 
 USAGE
-my $log_dir     =   '/Users/deback/myfiles/postdoc/experiments/PreventAD/analysis/ASL_quantification/logs/ASLquantFromDICOM_v2-094_Elcapitan/Convert_logs';
+my $root_dir  = '/Volumes/LINeV/Data/clement';
+my $log_dir   = $root_dir . '/data/siemens_data/preventad/output_PAD/logs/log_ConvertDicom';
+my $command_mkdir_log	= "mkdir -p " . $log_dir;
+system($command_mkdir_log);
+
 my ($list,@args);
 
 my @args_table = (["-list",     "string",   1,  \$list,         "list of archives to look in for ASL dicom files"],

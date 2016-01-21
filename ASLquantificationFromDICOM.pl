@@ -21,12 +21,15 @@ Usage $0 [options]
 
 USAGE
 
-my $data_dir 	 = '/Users/deback/myfiles/postdoc/experiments/PreventAD/Transfers/ASL/'
-					. 'From_dcm_files/DATA_RELEASE_1.0_candidates';
-my $script_dir   = '/Users/deback/myfiles/postdoc/experiments/PreventAD/Scripts/ASLquantification';
-my $log_dir     =   '/Users/deback/myfiles/postdoc/experiments/PreventAD/analysis/ASL_quantification/logs/ASLquantFromDICOM_v2-094_Elcapitan/ASLquant_logs';
-my $out         =   '/Users/deback/myfiles/postdoc/experiments/PreventAD/output/ASL/From_dcm_files/31LP_candidates/ANALYSES/ASLquant_v2-094_Elcapitan';
-my $xml_template=   '/Users/deback/myfiles/postdoc/experiments/PreventAD/analysis/ASL_quantification/ASL_quantification_pipeline/XML_analyses_parameters/ASLparameters_v2.0_2013-10-28.xml';
+my $root_dir    = '/Volumes/LINeV/Data/clement';
+my $scripts_dir = $root_dir . '/scripts/preventAD/ASL_quantification_pipeline';
+my $log_dir     = $root_dir . '/data/siemens_data/preventad/output_PAD/logs/log_ASL_quantif';
+my $command_mkdir_log	= "mkdir -p " . $log_dir;
+system($command_mkdir_log);
+my $out         = $root_dir . '/data/siemens_data/preventad/output_PAD/ASL/ASLquant_v2-094_Elcapitan';
+my $command_mkdir_out	= "mkdir -p " . $out;
+system($command_mkdir_out);
+my $xml_template= $scripts_dir . '/XML_analyses_parameters/ASLparameters_v2.0_2013-10-28_with_SNR.xml';
 my ($list,@args);
 my $unwarp  	 = 0; # set fieldmap correction to none
 

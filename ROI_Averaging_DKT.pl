@@ -21,16 +21,17 @@ Usage $0 [options]
 USAGE
 # define root directory as well as the directory where the scripts and the data are
 # located
-my $root_dir    = '/Users/deback/myfiles/postdoc/experiments/PreventAD';
-my $scripts_dir = $root_dir . '/analysis/ASL_quantification';
-my $data_dir  	= $root_dir . '/output/ASL/From_dcm_files/DATA_RELEASE_1.0_candidates';
+my $root_dir    = '/Volumes/LINeV/Data/clement';
+my $scripts_dir = $root_dir . '/scripts/preventAD/ASL_quantification_pipeline';
+my $data_dir    = $root_dir . 'data/siemens_data/preventad/output_PAD/ASL/';
 # defaults
-my $log_dir   = $scripts_dir . '/logs';
-my $cbf_dir   = $data_dir    . '/ANALYSES/ASLquantFromDICOM_v2-094_Elcapitan_noFieldmapCorrection';
-my $masks_dir = $data_dir    . '/MASK_DKT_mindboggle/partial_volume_correction';
-my $avg_dir   = $data_dir    . '/EXTRACTED_CBF';
-my $DKT_dir	  = $scripts_dir . '/Templates/DKT_mindboggle_101/parcel_files';
-my $xml_file  = $scripts_dir . '/XML_analyses_parameters/ROIaveragingParameters_v2.0_2013-10-28.xml';
+my $log_dir     = $root_dir . '/data/siemens_data/preventad/output_PAD/logs/log_ROI_averaging';
+my $cbf_dir     = $data_dir    . '/ASLquant_v2-094_Elcapitan';
+my $masks_dir   = $data_dir    . '/MASK_DKT_mindboggle/partial_volume_correction';
+my $avg_dir     = $data_dir    . '/EXTRACTED_CBF';
+my $DKT_dir	   = $root_dir . 'data/siemens_data/preventad/Templates/DKT_mindboggle_101/parcel_files';
+my $xml_file    = $scripts_dir . '/XML_analyses_parameters/ASLparameters_v2.0_2013-10-28_with_SNR.xml';
+					. 'CIVET_1.12_icbm152nl_AAL_N3_125';
 my $nlavg	  = undef;  # set compute neurolens average to none
 my $mincstats = undef;  # set compute minc stats to none
 my ($list, @args);

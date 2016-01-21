@@ -23,13 +23,9 @@ Usage $0 [options]
 -help for options
 
 USAGE
-my $log_dir   = '/Users/deback/myfiles/postdoc/experiments/PreventAD/analysis/ASL_quantification/'
-					. 'logs/ASLquantFromDICOM_v2-094_Elcapitan/Create_Masks_logs';
-my $root_dir  = '/Users/deback/myfiles/postdoc/experiments/PreventAD/output/ASL/From_dcm_files/'
-     				. 'DATA_RELEASE_1.0_candidates';
-my $civet_root_dir = '/Users/deback/myfiles/postdoc/experiments/PreventAD/output/ASL/'
-					. 'From_dcm_files/DATA_RELEASE_1.0_candidates/'
-					. 'CIVET_1.12_icbm152nl_AAL_N3_125';
+my $log_dir         = '/Volumes/LINeV/Data/clement/data/siemens_data/preventad/output_PAD/logs/log_Create_Masks';
+my $root_dir        = '/Volumes/LINeV/Data/clement/data/siemens_data/preventad/output_PAD/ASL';
+my $civet_root_dir	= $root_dir . 'CIVET_1.12_icbm152nl_AAL_N3_125';
 my $XFMcreate = 0;
 my ($mask_root_dir, $list, $roi_dir, @args);
 
