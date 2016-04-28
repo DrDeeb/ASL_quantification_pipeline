@@ -9,6 +9,7 @@ use Getopt::Tabular;
 use File::Basename;
 use FindBin;
 use ASL;
+use Data::Uniqid qw ( suniqid uniqid luniqid );
 
 my $Usage = <<USAGE;
 
@@ -32,6 +33,9 @@ system($command_mkdir_out);
 my $xml_template= $scripts_dir . '/XML_analyses_parameters/ASLparameters_v2.0_2013-10-28_with_SNR.xml';
 my ($list,@args);
 my $unwarp  	 = 0; # set fieldmap correction to none
+my  $nldo_wks_id  = suniqid;
+my ($nldo_wks_cmd)= "export NLDO_WORKSPACE_UID=$nldo_wks_id";
+my $clean_cmd     = $nldo_wks_cmd . "; nldo clean";
 
 my @args_table = (
  ["-list",    "string",  1, \$list,         "list of directories with nlvolume files"],
@@ -108,7 +112,8 @@ foreach my $natdir (@dirs){
     		$cbf_map_nlvol,       $cbf_map_mnc,
     		$fmap_rads,           $phase_map,
     		$mag_map,             $MC_unwarp,
-    		$flow_snr,            $even_snr
+    		$flow_snr,            $even_snr,
+        $flow_snr_map_mnc,   $even_snr_map_mnc
     	   ) = &ASL::getOutputNames($filename, $outdir, $nldo_opt, $natdir, $unwarp);
 
         if ((-e $preprocessed_flow) && (-e $preprocessed_even)
@@ -128,9 +133,9 @@ foreach my $natdir (@dirs){
         }
 
         # Run preprocessing and GLM on the flow series
-        my $command_open     = "nldo open " . $natdir . "/" . $filename;
-        my $command_close    = "nldo close LAST";
-        my $command_closeALL = "nldo close ALL";
+        my $command_open     = $nldo_wks_cmd . "; nldo open " . $natdir . "/" . $filename;
+        my $command_close    = $nldo_wks_cmd . "; nldo close LAST";
+        my $command_closeALL = $nldo_wks_cmd . "; nldo close ALL";
         system($command_open);
 
         # run motion correction
@@ -138,13 +143,13 @@ foreach my $natdir (@dirs){
             next unless ($plug eq "Motion Correction");
             print "Running $plug on $candID $visit ...\n";
             my ($options) = &ASL::getParameters($nldo_opt, $plug);
-            my $command   = "nldo run '$plug' -inputDataset LAST $options";
+            my $command   = $nldo_wks_cmd . "; nldo run '$plug' -inputDataset LAST $options";
             system ($command);
         }
 
         # save MC file as nlvolume and minc
-        my $command_saveMCnlvol = "nldo save LAST " . $MC_nlvolume;
-        my $command_saveMCminc  = "nldo save LAST " . $MC_minc;
+        my $command_saveMCnlvol = $nldo_wks_cmd . "; nldo save LAST " . $MC_nlvolume;
+        my $command_saveMCminc  = $nldo_wks_cmd . "; nldo save LAST " . $MC_minc;
         system ($command_saveMCnlvol);
         system ($command_saveMCminc);
         system ($command_closeALL);
@@ -158,7 +163,7 @@ foreach my $natdir (@dirs){
         }
 
         # open unwarped image if fieldmap correction, or MC file otherwise
-        $command_open = "nldo open ";
+        $command_open = $nldo_wks_cmd . "; nldo open ";
         if ($unwarp) {
         	$command_open .= $MC_unwarp;
         } else {
@@ -171,16 +176,18 @@ foreach my $natdir (@dirs){
             next if ($plug eq "ASL Quantification" || $plug eq "Motion Correction");
             print "Running $plug on $candID $visit ...\n";
             my ($options)   = &ASL::getParameters($nldo_opt,$plug);
-            my $command     = "nldo run '$plug' -inputDataset LAST $options";
+            my $command     = $nldo_wks_cmd . "; nldo run '$plug' -inputDataset LAST $options";
             system($command);
         }
 
         # Save and close the preprocessed images and the effect map for the flow series
-        my $command_saveSNRFlow     = "nldo save LAST $flow_snr"  if ($flow_snr);
-        my $command_saveEffFlow     = "nldo save LAST $flow_eff";
-        my $command_saveSeEffFlow   = "nldo save LAST $flow_se_eff";
-        my $command_savePreprocFlow = "nldo save LAST $preprocessed_flow";
+        my $command_saveSNRFlow     = $nldo_wks_cmd . "; nldo save LAST $flow_snr"  if ($flow_snr);
+        my $command_saveEffFlow     = $nldo_wks_cmd . "; nldo save LAST $flow_eff";
+        my $command_saveSeEffFlow   = $nldo_wks_cmd . "; nldo save LAST $flow_se_eff";
+        my $command_savePreprocFlow = $nldo_wks_cmd . "; nldo save LAST $preprocessed_flow";
+        my $command_saveFSNR_mnc    = $nldo_wks_cmd . "; nldo save LAST $flow_snr_map_mnc";
         system($command_saveSNRFlow) if ($flow_snr);
+        system($command_saveFSNR_mnc) if ($flow_snr);
         system($command_close)       if ($flow_snr);
         system($command_saveEffFlow);
         system($command_close); # close the effet flow map
@@ -195,16 +202,18 @@ foreach my $natdir (@dirs){
             next unless ($plug eq "GLM Time Series" || $plug eq "Spatial Filtering");
             print "Running $plug on $candID $visit even series ...\n";
             my ($options)   =   &ASL::getParameters($nldo_opt,$plug);
-            my $command     =   "nldo run '$plug' -inputDataset LAST $options";
+            my $command     =   $nldo_wks_cmd . "; nldo run '$plug' -inputDataset LAST $options";
             system($command);
         }
 
         # Save and close the preprocessed images and the effect map for the even series
-        my $command_saveSNREven     = "nldo save LAST $even_snr" if ($even_snr);
-        my $command_saveEffEven     = "nldo save LAST $even_eff";
-        my $command_saveSeEffEven   = "nldo save LAST $even_se_eff";
-        my $command_savePreprocEven = "nldo save LAST $preprocessed_even";
+        my $command_saveSNREven     = $nldo_wks_cmd . "; nldo save LAST $even_snr" if ($even_snr);
+        my $command_saveEffEven     = $nldo_wks_cmd . "; nldo save LAST $even_eff";
+        my $command_saveSeEffEven   = $nldo_wks_cmd . "; nldo save LAST $even_se_eff";
+        my $command_savePreprocEven = $nldo_wks_cmd . "; nldo save LAST $preprocessed_even";
+        my $command_saveESNR_mnc    = $nldo_wks_cmd . "; nldo save LAST $even_snr_map_mnc";
         system($command_saveSNREven) if ($even_snr);
+        system($command_saveESNR_mnc) if ($even_snr);
         system($command_close)       if ($even_snr);
         system($command_saveEffEven);
         system($command_close);
@@ -216,22 +225,23 @@ foreach my $natdir (@dirs){
         system($command_closeALL);
 
         # Open the even and flow maps and run ASL quantification on them
-        my $command_open_flow = "nldo open ".$flow_eff;
-        my $command_open_even = "nldo open ".$even_eff;
+        my $command_open_flow = $nldo_wks_cmd . "; nldo open ".$flow_eff;
+        my $command_open_even = $nldo_wks_cmd . "; nldo open ".$even_eff;
         system($command_open_flow);
         system($command_open_even);
         foreach my $plug (@plugin_list){
             next unless ($plug eq "ASL Quantification");
             print "Running $plug on $candID $visit even series ...\n";
             my ($options) = &ASL::getParameters($nldo_opt,$plug);
-            my $cmd = "nldo run '$plug' -m0Estimate $even_eff -deltaM $flow_eff $options";
+            my $cmd = $nldo_wks_cmd . "; nldo run '$plug' -m0Estimate $even_eff -deltaM $flow_eff $options";
             system($cmd);
         }
-        my $command_saveCBF_nlvol = "nldo save LAST $cbf_map_nlvol";
-        my $command_saveCBF_mnc   = "nldo save LAST $cbf_map_mnc";
+        my $command_saveCBF_nlvol = $nldo_wks_cmd . "; nldo save LAST $cbf_map_nlvol";
+        my $command_saveCBF_mnc   = $nldo_wks_cmd . "; nldo save LAST $cbf_map_mnc";
         system($command_saveCBF_nlvol);
         system($command_saveCBF_mnc);
         system($command_closeALL);
+        system($clean_cmd);
     }
 }
 

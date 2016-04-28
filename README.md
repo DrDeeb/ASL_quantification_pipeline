@@ -1,5 +1,6 @@
-# ASL quantification pipeline using Neurolens 2.094
+### ASL quantification pipeline using Neurolens 2.095
 
+## Required packages and software
 This pipeline required:
 - Neurolens 2 (>=2.094)
   - Motion Correction plugin
@@ -26,4 +27,11 @@ This pipeline required:
   - fugue
   - prelude
 
-- XML simple
+- Perl
+  - XML simple
+  - XML::Parser
+  - Term::ReadLine::Gnu (not necessary but usefull)
+  - Data::Uniqid
+
+## Path organisation
+Coming soon...
