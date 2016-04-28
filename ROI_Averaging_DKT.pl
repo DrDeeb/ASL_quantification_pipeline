@@ -22,15 +22,15 @@ USAGE
 # define root directory as well as the directory where the scripts and the data are
 # located
 my $root_dir    = '/Volumes/LINeV/Data/clement';
-my $scripts_dir = $root_dir . '/scripts/preventAD/ASL_quantification_pipeline';
-my $data_dir    = $root_dir . '/data/siemens_data/preventad/output_PAD/ASL';
+my $scripts_dir = $root_dir . '/scripts/preventAD/ASL_quantif_test_retest_32ch/ASL_quantification_pipeline';
+my $data_dir    = $root_dir . '/data/siemens_data/preventad/PAD_data_tr32ch/output_PAD_tr32ch/ASL';
 # defaults
-my $log_dir     = $root_dir . '/data/siemens_data/preventad/output_PAD/logs/log_ROI_averaging';
+my $log_dir     = $root_dir . '/data/siemens_data/preventad/PAD_data_tr32ch/output_PAD_tr32ch/logs/log_ROI_averaging';
 my $cbf_dir     = $data_dir    . '/ASLquant_v2-094_Elcapitan';
 my $masks_dir   = $data_dir    . '/MASK_DKT_mindboggle/partial_volume_correction';
 my $avg_dir     = $data_dir    . '/EXTRACTED_CBF';
-my $DKT_dir	   = $root_dir . '/data/siemens_data/preventad/Templates/DKT_mindboggle_101/parcel_files';
-my $xml_file    = $scripts_dir . '/XML_analyses_parameters/ASLparameters_v2.0_2013-10-28_with_SNR.xml';
+my $DKT_dir	   	= $root_dir . '/data/siemens_data/preventad/Templates/DKT_mindboggle_101/parcel_files';
+my $xml_file    = $scripts_dir . '/XML_analyses_parameters/ROIaveragingParameters_v2.0_2013-10-28.xml';
 my $nlavg	  = undef;  # set compute neurolens average to none
 my $mincstats = undef;  # set compute minc stats to none
 my ($list, @args);
@@ -64,7 +64,7 @@ GetOptions(\@args_table,\ @ARGV,\@args) || exit 1;
 
 # needed for log file
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
-my $date    =   sprintf("%4d-%02d-%02d",$year+1900,$mon+1,$mday);
+my $date    =   sprintf("%4d-%02d-%02d-%02d-%02d-%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec);
 my $log     =   "$log_dir/ASLQuantification$date.log";
 open(LOG,">>$log");
 print LOG "Log file, $date\n\n";
@@ -111,6 +111,8 @@ foreach my $row (@rows) {
 
     # get list of CBF maps in $cand_cbf_dir
     my ($cbf_maps) = &ASL::getMincs($cand_cbf_dir,"cbf.mnc");
+    my ($fsnr_maps) = &ASL::getMincs($cand_cbf_dir,"-flow-SM-snr.mnc");
+    my ($esnr_maps) = &ASL::getMincs($cand_cbf_dir,"-even-SM-snr.mnc");
     next if (@$cbf_maps == 0); # go to the next candidate if no CBF maps in $cand_cbf_dir
 
     # read XML neurolens file if compute nlavg is set
@@ -134,6 +136,8 @@ foreach my $row (@rows) {
 
 	# create the CSV file in which avg CBF will be saved
 	my $csv_gp = $avg_dir . "/GM_avg_and_DKT_CBF_" . $date . ".csv";
+	my $csv_gp2 = $avg_dir . "/GM_avg_and_DKT_fSNR_" . $date . ".csv";
+	my $csv_gp3 = $avg_dir . "/GM_avg_and_DKT_eSNR_" . $date . ".csv";
 
 	# if first line, create CSV file and write title
 	if ($count < 1) {
@@ -142,6 +146,12 @@ foreach my $row (@rows) {
 		open (CSV, ">$csv_gp") or die "$!";
 		print CSV $title_row;
 		close (CSV);
+		open (CSV2, ">$csv_gp2") or die "$!";
+		print CSV2 $title_row;
+		close (CSV2);
+		open (CSV3, ">$csv_gp3") or die "$!";
+		print CSV3 $title_row;
+		close (CSV3);
 	}
 
 	# loop through list of CBF maps (each CBF map will be a row of the spreadsheet)
@@ -155,6 +165,30 @@ foreach my $row (@rows) {
 		open (CSV, ">>$csv_gp");
 		print CSV $row;
 		close (CSV);
+	}
+
+	foreach my $fsnr (@$fsnr_maps) {
+		my ($row2) = &ASL::createSpreadsheetRow($roi_list,   $candID,   $visit,	   $fsnr,
+											   $masks_dir,  $plugin,   $nloptions, $nlavg,
+											   $mncoptions, $mincstats
+											  );
+
+		# print row into the spreadsheet
+		open (CSV2, ">>$csv_gp2");
+		print CSV2 $row2;
+		close (CSV2);
+	}
+
+	foreach my $esnr (@$esnr_maps) {
+		my ($row3) = &ASL::createSpreadsheetRow($roi_list,   $candID,   $visit,	   $esnr,
+											   $masks_dir,  $plugin,   $nloptions, $nlavg,
+											   $mncoptions, $mincstats
+											  );
+
+		# print row into the spreadsheet
+		open (CSV3, ">>$csv_gp3");
+		print CSV3 $row3;
+		close (CSV3);
 	}
 
 	$count ++;

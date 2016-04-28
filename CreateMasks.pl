@@ -23,9 +23,9 @@ Usage $0 [options]
 -help for options
 
 USAGE
-my $log_dir         = '/Volumes/LINeV/Data/clement/data/siemens_data/preventad/output_PAD/logs/log_Create_Masks';
-my $root_dir        = '/Volumes/LINeV/Data/clement/data/siemens_data/preventad/output_PAD/ASL';
-my $civet_root_dir	= $root_dir . 'CIVET_1.12_icbm152nl_AAL_N3_125';
+my $log_dir         = '/Volumes/LINeV/Data/clement/data/siemens_data/preventad/PAD_data_tr32ch/output_PAD_tr32ch/logs/log_Create_Masks';
+my $root_dir        = '/Volumes/LINeV/Data/clement/data/siemens_data/preventad/PAD_data_tr32ch/output_PAD_tr32ch/ASL';
+my $civet_root_dir	= $root_dir . '/civet_tr32ch';
 my $XFMcreate = 0;
 my ($mask_root_dir, $list, $roi_dir, @args);
 
@@ -227,13 +227,13 @@ sub getPipelinePaths {
 	my ($root_dir, $mask_root_dir, $civet_root_dir, $candID, $visit) = @_;
 
 	# determine CBF analyses paths
-    my $nls_path       = $root_dir . '/ANALYSES/ASLquant_v2-094_Elcapitan';
+    my $nls_path       = $root_dir . '/ASL/ASLquant_v2-094_Elcapitan';
     my $analyses_dir   = $nls_path . '/'            . $candID . '/' . $visit;
     my $mask_dir       = $mask_root_dir . '/'       . $candID . '/' . $visit;
     my $transform_dir  = $root_dir . '/TRANSFORMS/' . $candID . '/' . $visit;
 
     # determine civet complete directory (aka. DCCID_Visit_adniT1_001)
-    my $civet_pattern  = $candID . "_" . $visit . "_adniT1";
+    my $civet_pattern  = $candID . "_" . $visit . "_t1";
     my $civet_dir      = &grepFile($civet_root_dir, $civet_pattern);
 
     # create mask_dir and transform_dir if do not exist

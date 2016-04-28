@@ -23,6 +23,7 @@ use Exporter();
 use File::Temp qw(tempdir);
 use XML::Simple;
 use File::Basename;
+use Data::Uniqid qw ( suniqid uniqid luniqid );
 
 $VERSION    =   0.0;
 @ISA        =   qw(Exporter);
@@ -40,7 +41,7 @@ This function extracts the site, candid and visit from the path to the ASL file 
 sub getSiteSubjectVisitIDs {
     my  ($d)=   @_;
 
-    if (($d  =~  m/(\d+)\/([N,P][A,R][P,E][B,F][L,U]\d+)/i) || ($d =~ m/(\d+)\/(living_phantom_MTL_MS_\d+)/i)){
+    if (($d  =~  m/(\d+)\/([N,P][A,R][P,E][B,F][L,U]\d+)/i) || ($d =~ m/(\d+)\/(living_phantom_MTL_MS_\d+)/i) || ($d =~ m/(living_phantom_MTL_[A-M][B-T])\/((1|3)2ch_scan\d+)/i)){
         my  $site   ="PreventAD";
         my  $candID =$1;
         my  $visit  =$2;
@@ -118,11 +119,13 @@ sub getOutputNames {
 
     # even file names
     my $even_basename    = substr($preprocessed_even, 0, -9);
-	my $even_snr         = $even_basename . "-snr.nlvolume" if ($create_snr);
+    my $even_snr         = $even_basename . "-snr.nlvolume" if ($create_snr);
     my $even_eff         = $even_basename . "-eff.nlvolume";
     my $even_se_eff      = $even_basename . "-se_eff.nlvolume";
     my $cbf_map_nlvolume = substr($flow_eff,0,-9) . "-cbf.nlvolume";
     my $cbf_map_minc     = substr($flow_eff,0,-9) . "-cbf.mnc";
+    my $flow_snr_map_mnc     = substr($flow_snr,0,-9) . ".mnc";
+    my $even_snr_map_mnc     = substr($even_snr,0,-9) . ".mnc";
 
     print "\n\n$cbf_map\n\n";
 
@@ -133,7 +136,8 @@ sub getOutputNames {
     		$cbf_map_nlvolume,    $cbf_map_minc,
     		$fmap_rads,           $phase_map,
     		$mag_map,             $MC_unwarp,
-    		$flow_snr,            $even_snr
+    		$flow_snr,            $even_snr,
+        $flow_snr_map_mnc,   $even_snr_map_mnc
     	   );
 }
 
@@ -227,12 +231,16 @@ sub runFieldmapCorrection {
 	my ($MC_unwarp_mnc)	= &convert2minc($MC_unwarp_nii, $MC_minc);
 
 	# open with neurolens, save it as nlvolume
-  my ($open_mnc) = "nldo open $MC_unwarp_mnc";
-  my ($nldo_save) = "nldo save LAST $MC_unwarp_nlvol";
-  my ($nldo_close) = "nldo close ALL";
+  my $nldo_wks_id = suniqid;
+  my $nldo_wks_cmd = "export NLDO_WORKSPACE_UID=$nldo_wks_id";
+  my ($nldo_clean)  = $nldo_wks_cmd . "; nldo clean";
+  my ($open_mnc)    = $nldo_wks_cmd . "; nldo open $MC_unwarp_mnc";
+  my ($nldo_save)   = $nldo_wks_cmd . "; nldo save LAST $MC_unwarp_nlvol";
+  my ($nldo_close)  = $nldo_wks_cmd . "; nldo close ALL";
   system($open_mnc);
   system($nldo_save);
   system($nldo_close);
+  system($nldo_clean);
 
 	# return undef if $fmap_rad does not exist, 1 otherwise
 	return undef unless (-e $MC_unwarp);
@@ -454,12 +462,18 @@ sub createSpreadsheetRow {
 
 	foreach my $roi (@$roi_list) {
 
+    next if ($$roi[0] eq '.' || $$roi[0]  eq '..');
+
+    my $roi_full_path;
+
 		unless ($roi =~ m/pve_exactgm_brain_asl.mnc/i) {
 			my $subject_dir = $masks_dir . "/" . $candID . "/" . $visit;
-			($roi) = &getMincs($subject_dir, $roi);
-			$roi = $$roi[0];
-		}
-		my ($roi_values) = &computeROIs($roi,     $cbf,    	   $plugin,
+			($roi_full_path) = &getMincs($subject_dir, $roi);
+			$roi_full_path = $$roi_full_path[0];
+		} else {
+      $roi_full_path = $roi;
+    }
+		my ($roi_values) = &computeROIs($roi_full_path,     $cbf,    	   $plugin,
 										$nloptions, $mncoptions, $nlavg,
 										$mincstats
 									   );
@@ -508,14 +522,18 @@ Execute Neurolens command to get the average CBF in GM mask.
 sub executeNL {
     my  ($cbf_map,$gm_mask,$plugin,$options)    =   @_;
 
-    my  $open_cmd     = "nldo open ".$cbf_map." ".$gm_mask;
-    my  $closeALL_cmd = "nldo close ALL";
-    my  $ROIavg_cmd   = "nldo run '$plugin' -maskDataset $gm_mask -inputDataset $cbf_map $options";
+    my  $nldo_wks_id  = suniqid;
+    my  $nldo_wks_cmd = "export NLDO_WORKSPACE_UID=$nldo_wks_id";
+    my  $clean_cmd    = $nldo_wks_cmd . "; nldo clean";
+    my  $open_cmd     = $nldo_wks_cmd . "; nldo open ".$cbf_map." ".$gm_mask;
+    my  $closeALL_cmd = $nldo_wks_cmd . "; nldo close ALL";
+    my  $ROIavg_cmd   = $nldo_wks_cmd . "; nldo run '$plugin' -maskDataset $gm_mask -inputDataset $cbf_map $options";
 
     system($open_cmd);
     my  $average      = `$ROIavg_cmd`;
     chomp($average);
     system($closeALL_cmd);
+    system($clean_cmd);
 
     return  ($average);
 }

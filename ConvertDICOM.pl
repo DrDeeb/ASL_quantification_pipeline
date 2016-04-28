@@ -21,7 +21,7 @@ Usage $0 [options]
 
 USAGE
 my $root_dir  = '/Volumes/LINeV/Data/clement';
-my $log_dir   = $root_dir . '/data/siemens_data/preventad/output_PAD/logs/log_ConvertDicom';
+my $log_dir   = $root_dir . '/data/siemens_data/preventad/PAD_data_tr32ch/output_PAD_tr32ch/logs/log_ConvertDicom';
 my $command_mkdir_log	= "mkdir -p " . $log_dir;
 system($command_mkdir_log);
 
