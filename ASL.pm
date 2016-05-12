@@ -271,7 +271,7 @@ sub convert2minc {
 	# reinsert mincheaders in the file
 	my ($success) = &insertMincHeader($MC_mnc, $MC_unwarp_mnc);
 
-	return ($MC_mnc) if ($success && (-e $MC_mnc));
+	return ($MC_unwarp_mnc) if ($success && (-e $MC_unwarp_mnc));
 	return undef;
 }
 
