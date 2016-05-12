@@ -10,6 +10,7 @@ use Getopt::Tabular;
 use File::Basename;
 use FindBin;
 use ASL;
+use Data::Uniqid qw ( suniqid uniqid luniqid );
 
 my $Usage = <<USAGE;
 
@@ -24,6 +25,9 @@ my $root_dir  = '/Volumes/LINeV/Data/clement';
 my $log_dir   = $root_dir . '/data/siemens_data/preventad/PAD_data_tr32ch/output_PAD_tr32ch/logs/log_ConvertDicom';
 my $command_mkdir_log	= "mkdir -p " . $log_dir;
 system($command_mkdir_log);
+my  $nldo_wks_id  = suniqid;
+my ($nldo_wks_cmd)= "export NLDO_WORKSPACE_UID=$nldo_wks_id";
+my $clean_cmd     = $nldo_wks_cmd . "; nldo clean";
 
 my ($list,@args);
 
@@ -73,12 +77,13 @@ foreach my $tar (@tars){
         # Open DICOM and save run as nlvolume
         my $dirname			= basename($tar);
         $dirname			=~ s/_\d\.tgz$//i;
-		my $command_open	= "nldo open " . $TmpDir . "/" . $dirname;
-		my $command_save	= "nldo save LAST " . $filename;
-		my $command_close	= "nldo close ALL";
+		my $command_open	= $nldo_wks_cmd . "; nldo open " . $TmpDir . "/" . $dirname;
+		my $command_save	= $nldo_wks_cmd . "; nldo save LAST " . $filename;
+		my $command_close	= $nldo_wks_cmd . "; nldo close ALL";
 		system($command_open);
 		system($command_save) unless (-e $filename);
 		system($command_close);
+    system($clean_cmd);
 	} else {
 		print LOG "\nERROR: $tar is not a valid archive containing ASL DICOM\n";
         next;
