@@ -262,11 +262,16 @@ sub convert2minc {
 
 	# determine minc name
 	my $MC_unwarp_name = substr($MC_unwarp_nii, 0, -4);
+	my $MC_unwarp_mnc_temp  = $MC_unwarp_name . "_temp.mnc";
 	my $MC_unwarp_mnc  = $MC_unwarp_name . ".mnc";
 
 	# nii2mnc conversion
-	my $mnc2nii_cmd = "nii2mnc $MC_unwarp_nii $MC_unwarp_mnc";
-	system($mnc2nii_cmd);
+	my $nii2mnc_cmd = "nii2mnc $MC_unwarp_nii $MC_unwarp_mnc_temp";
+	system($nii2mnc_cmd);
+
+  # minc resample to avoid error in space due to nifti conversion
+	my $mincresample_cmd = "mincresample $MC_unwarp_mnc_temp -like $MC_mnc $MC_unwarp_mnc";
+	system($mincresample_cmd);
 
 	# reinsert mincheaders in the file
 	my ($success) = &insertMincHeader($MC_mnc, $MC_unwarp_mnc);
